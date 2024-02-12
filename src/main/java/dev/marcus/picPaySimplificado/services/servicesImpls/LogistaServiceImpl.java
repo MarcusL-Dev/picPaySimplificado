@@ -2,6 +2,7 @@ package dev.marcus.picPaySimplificado.services.servicesImpls;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Service;
 import dev.marcus.picPaySimplificado.domain.entities.logista.Logista;
 import dev.marcus.picPaySimplificado.domain.entities.logista.DTOs.LogistaDTO;
 import dev.marcus.picPaySimplificado.domain.entities.logista.DTOs.LogistaOutDTO;
+import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.EntityNotFoundException;
+import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.TypeExceptions;
 import dev.marcus.picPaySimplificado.repositories.LogistaRepository;
 import dev.marcus.picPaySimplificado.services.interfaces.LogistaService;
 
@@ -36,6 +39,15 @@ public class LogistaServiceImpl implements LogistaService{
         var newLogista = new Logista(logistaData, encryptedSenha);
         this.logistaRepository.save(newLogista);
         var logistaOutData = new LogistaOutDTO(newLogista);
+        return logistaOutData;
+    }
+
+    @Override
+    public LogistaOutDTO getLogista(UUID id) {
+        @SuppressWarnings("null")
+        var logista = logistaRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(TypeExceptions.LOGISTA, id));
+        var logistaOutData = new LogistaOutDTO(logista);
         return logistaOutData;
     }
     

@@ -30,8 +30,8 @@ public class SecurityConfiguration {
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(HttpMethod.POST, "/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/logistas").permitAll()
+                .requestMatchers(HttpMethod.POST, "/usercomum").permitAll()
                 .requestMatchers(HttpMethod.POST, "/transacoes").hasRole("COMUM")
-                .requestMatchers(HttpMethod.GET, "/logistas").hasRole("LOGISTA")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
