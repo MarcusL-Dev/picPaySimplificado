@@ -5,7 +5,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import dev.marcus.picPaySimplificado.domain.entities.usuario.Usuario;
 import dev.marcus.picPaySimplificado.domain.entities.usuario.DTOs.LoginFormDTO;
+import dev.marcus.picPaySimplificado.domain.entities.usuario.DTOs.LoginResponseDTO;
+import dev.marcus.picPaySimplificado.infra.springSecurityConfig.TokenService;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,14 +21,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class AuthenticationController {
 
     @Autowired
-    AuthenticationManager authenticationManager;
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private TokenService tokenService;
 
     @PostMapping()
-    public ResponseEntity login(@RequestBody @Valid LoginFormDTO loginFormData) {
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid LoginFormDTO loginFormData) {
         var userPassword = new UsernamePasswordAuthenticationToken(loginFormData.email(), loginFormData.senha());
         var auth = authenticationManager.authenticate(userPassword);
-        
-        return ResponseEntity.ok().build();
+
+        var token = tokenService.generateToken((Usuario) auth.getPrincipal());
+        var loginResponse = new LoginResponseDTO(token);
+
+        return ResponseEntity.ok().body(loginResponse);
     }
     
 }
