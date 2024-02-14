@@ -1,10 +1,15 @@
 package dev.marcus.picPaySimplificado.domain.entities.userComum;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import dev.marcus.picPaySimplificado.domain.entities.transaction.Transaction;
 import dev.marcus.picPaySimplificado.domain.entities.userComum.DTOs.UserComumDTO;
 import dev.marcus.picPaySimplificado.domain.entities.usuario.Roles;
 import dev.marcus.picPaySimplificado.domain.entities.usuario.Usuario;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,6 +25,9 @@ import lombok.Setter;
 public class UserComum extends Usuario{
     @Column(name = "cpf", unique = true, nullable = false, length = 11)
     private String cpf;
+
+    @OneToMany(mappedBy = "usuarioPagante")
+    private List<Transaction> transactionsPagas = new ArrayList<>();
 
     public UserComum(UserComumDTO userComumData, String senha){
         super(

@@ -12,7 +12,7 @@ import dev.marcus.picPaySimplificado.domain.entities.logista.Logista;
 import dev.marcus.picPaySimplificado.domain.entities.logista.DTOs.LogistaDTO;
 import dev.marcus.picPaySimplificado.domain.entities.logista.DTOs.LogistaOutDTO;
 import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.EntityNotFoundException;
-import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.TypeExceptions;
+import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.TypeEntities;
 import dev.marcus.picPaySimplificado.repositories.LogistaRepository;
 import dev.marcus.picPaySimplificado.services.interfaces.LogistaService;
 
@@ -46,7 +46,7 @@ public class LogistaServiceImpl implements LogistaService{
     public LogistaOutDTO getLogista(UUID id) {
         @SuppressWarnings("null")
         var logista = logistaRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException(TypeExceptions.LOGISTA, id));
+            .orElseThrow(() -> new EntityNotFoundException(TypeEntities.LOGISTA, id));
         var logistaOutData = new LogistaOutDTO(logista);
         return logistaOutData;
     }

@@ -12,7 +12,7 @@ import dev.marcus.picPaySimplificado.domain.entities.userComum.UserComum;
 import dev.marcus.picPaySimplificado.domain.entities.userComum.DTOs.UserComumDTO;
 import dev.marcus.picPaySimplificado.domain.entities.userComum.DTOs.UserComumOutDTO;
 import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.EntityNotFoundException;
-import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.TypeExceptions;
+import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.TypeEntities;
 import dev.marcus.picPaySimplificado.repositories.UserComumRepository;
 import dev.marcus.picPaySimplificado.services.interfaces.UserComumService;
 
@@ -46,7 +46,7 @@ public class UserComumServiceImpl implements UserComumService{
     public UserComumOutDTO getUserComum(UUID id) {
         @SuppressWarnings("null")
         var userComum = userComumRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException(TypeExceptions.USUARIO_COMUM, id));
+            .orElseThrow(() -> new EntityNotFoundException(TypeEntities.USUARIO_COMUM, id));
         var userComumOutData = new UserComumOutDTO(userComum);
         return userComumOutData;
     }

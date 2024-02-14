@@ -1,6 +1,8 @@
 package dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions;
 
-public enum TypeExceptions {
+public enum TypeEntities {
+    USUARIO,
     LOGISTA,
-    USUARIO_COMUM
+    USUARIO_COMUM,
+    TRANSACTION
 }

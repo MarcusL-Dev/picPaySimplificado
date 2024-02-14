@@ -26,12 +26,12 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
         return httpSecurity
             .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement( session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(HttpMethod.POST, "/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/logistas").permitAll()
                 .requestMatchers(HttpMethod.POST, "/usercomum").permitAll()
-                .requestMatchers(HttpMethod.POST, "/transacoes").hasRole("COMUM")
+                .requestMatchers(HttpMethod.POST, "/transactions").hasRole("COMUM")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
