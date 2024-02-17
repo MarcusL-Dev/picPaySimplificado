@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import dev.marcus.picPaySimplificado.domain.entities.transaction.Transaction;
 
-public interface TransactionRepository extends JpaRepository<Transaction, UUID>{
+public interface TransactionReporitory extends JpaRepository<Transaction, UUID>{
     
 }

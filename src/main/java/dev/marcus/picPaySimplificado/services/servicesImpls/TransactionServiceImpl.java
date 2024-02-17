@@ -1,5 +1,7 @@
 package dev.marcus.picPaySimplificado.services.servicesImpls;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -8,14 +10,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import dev.marcus.picPaySimplificado.domain.entities.transaction.Transaction;
+import dev.marcus.picPaySimplificado.domain.entities.transaction.TypeTransaction;
 import dev.marcus.picPaySimplificado.domain.entities.transaction.DTOs.TransactionDTO;
 import dev.marcus.picPaySimplificado.domain.entities.transaction.DTOs.TransactionOutDTO;
+import dev.marcus.picPaySimplificado.domain.entities.transaction.DTOs.impl.TransactionOutDTOImpl;
+import dev.marcus.picPaySimplificado.domain.entities.transfer.Transfer;
+import dev.marcus.picPaySimplificado.domain.entities.transfer.DTOs.impl.TransferOutDTOImpl;
 import dev.marcus.picPaySimplificado.domain.entities.usuario.Roles;
 import dev.marcus.picPaySimplificado.domain.entities.usuario.Usuario;
 import dev.marcus.picPaySimplificado.domain.entities.usuario.DTOs.UsuarioOutDTO;
 import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.EntityNotFoundException;
 import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.TypeEntities;
-import dev.marcus.picPaySimplificado.repositories.TransactionRepository;
+import dev.marcus.picPaySimplificado.repositories.TransactionReporitory;
+import dev.marcus.picPaySimplificado.repositories.TransferRepository;
 import dev.marcus.picPaySimplificado.services.interfaces.LogistaService;
 import dev.marcus.picPaySimplificado.services.interfaces.TransactionService;
 import dev.marcus.picPaySimplificado.services.interfaces.UserComumService;
@@ -25,15 +32,17 @@ import dev.marcus.picPaySimplificado.services.interfaces.UsuarioService;
 public class TransactionServiceImpl implements TransactionService{
 
     @Autowired
-    private TransactionRepository transactionRepository;
+    private TransactionReporitory transactionRepository;
     @Autowired
     private UsuarioService usuarioService;
     @Autowired
     private UserComumService userComumService;
     @Autowired
     private LogistaService logistaService;
+    @Autowired
+    private TransferRepository transferRepository;
 
-    private UsuarioOutDTO transforUsuarioInUsuarioDTO(Usuario usuario){
+    private UsuarioOutDTO transforUsuarioToUsuarioDTO(Usuario usuario){
         if (usuario.getRole() == Roles.COMUM) {
             return userComumService.getUserComum(usuario.getId());
         }else{
@@ -45,32 +54,41 @@ public class TransactionServiceImpl implements TransactionService{
     public List<TransactionOutDTO> getTransactions() {
         var transactions = transactionRepository.findAll();
         var transactionsOutData = new ArrayList<TransactionOutDTO>();
-
+        TransactionOutDTO transactionOutData;
         for(Transaction transaction : transactions){
 
-            var usuarioPagante = transaction.getUsuarioPagante();
-            var usuarioPaganteData = this.transforUsuarioInUsuarioDTO(usuarioPagante);
+            var usuario = transaction.getUsuario();
+            var usuarioData = this.transforUsuarioToUsuarioDTO(usuario);
 
-            var usuarioRecebedor = transaction.getUsuarioRecebedor();
-            var usuarioRecebedorData = this.transforUsuarioInUsuarioDTO(usuarioRecebedor);
-
-            var transactionOutData = new TransactionOutDTO(usuarioPaganteData, usuarioRecebedorData, transaction);
+            if(transaction.getTypeTransaction() == TypeTransaction.TRANSFER){
+                var transfer = (Transfer) this.getTransaction(transaction.getId());
+                var usuarioRecebedor = transfer.getUsuarioRecebedor();
+                var usuarioRecebedorData = this.transforUsuarioToUsuarioDTO(usuarioRecebedor);    
+                transactionOutData = new TransferOutDTOImpl(usuarioData, usuarioRecebedorData, transfer);
+            }else{
+                transactionOutData = new TransactionOutDTOImpl(usuarioData, transaction);
+            }
             transactionsOutData.add(transactionOutData);
         }
-
         return transactionsOutData;
     }
 
     @Override
     public TransactionOutDTO createTransaction(TransactionDTO transactionData, String userEmail) {
-        var usuarioPagante = usuarioService.getUsuarioByEmail(userEmail);
-        var usuarioRecebedor = usuarioService.getUsuario(transactionData.idUsuarioRecebedor());
-        var newTransaction = new Transaction(transactionData, usuarioPagante, usuarioRecebedor);
+        var usuario = usuarioService.getUsuarioByEmail(userEmail);
+        var usuarioData = this.transforUsuarioToUsuarioDTO(usuario);
 
-        var usuarioPaganteData = this.transforUsuarioInUsuarioDTO(usuarioPagante);
-        var usuarioRecebedorData = this.transforUsuarioInUsuarioDTO(usuarioRecebedor);
+        if(transactionData.typeTransaction() == TypeTransaction.TRANSFER){
+            var usuarioRecebedor = usuarioService.getUsuario(transactionData.idUsuarioRecebedor());
+            var usuarioRecebedorData = this.transforUsuarioToUsuarioDTO(usuarioRecebedor);
+            var newTransfer = new Transfer(transactionData, LocalDateTime.now(), usuario, usuarioRecebedor);
+            transferRepository.save(newTransfer);
+            return new TransferOutDTOImpl(usuarioData, usuarioRecebedorData, newTransfer);
+        }
 
-        return new TransactionOutDTO(usuarioPaganteData ,usuarioRecebedorData, newTransaction);
+        var newTransaction = new Transaction(transactionData.valor(), LocalDateTime.now(), transactionData.typeTransaction(), usuario);
+        transactionRepository.save(newTransaction);
+        return new TransactionOutDTOImpl(usuarioData, newTransaction);
     }
 
     @Override
@@ -81,10 +99,14 @@ public class TransactionServiceImpl implements TransactionService{
             throw new EntityNotFoundException(TypeEntities.TRANSACTION, id);
         }
         var getTransaction = transaction.get();
-        var usuarioPaganteData = this.transforUsuarioInUsuarioDTO(getTransaction.getUsuarioPagante());
-        var usuarioRecebedorData = this.transforUsuarioInUsuarioDTO(getTransaction.getUsuarioRecebedor());
+        var usuarioPaganteData = this.transforUsuarioToUsuarioDTO(getTransaction.getUsuario());
 
-        return new TransactionOutDTO(usuarioPaganteData, usuarioRecebedorData, getTransaction);
+        if (getTransaction.getTypeTransaction() == TypeTransaction.TRANSFER) {
+            @SuppressWarnings("null")
+            var transfer = transferRepository.findById(getTransaction.getId()).get();
+            var usuarioRecebedorData = this.transforUsuarioToUsuarioDTO(transfer.getUsuarioRecebedor());
+            return new TransferOutDTOImpl(usuarioPaganteData, usuarioRecebedorData, getTransaction);
+        }
+        return new TransactionOutDTOImpl(usuarioPaganteData, getTransaction);
     }
-    
 }

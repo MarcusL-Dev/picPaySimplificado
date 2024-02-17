@@ -8,7 +8,6 @@ import dev.marcus.picPaySimplificado.domain.entities.transaction.DTOs.Transactio
 
 public interface TransactionService {
     List<TransactionOutDTO> getTransactions();
-    TransactionOutDTO createTransaction(TransactionDTO transactionData, String userEmail);
+    TransactionOutDTO createTransaction(TransactionDTO transferData, String userEmail);
     TransactionOutDTO getTransaction(UUID id);
-
 }

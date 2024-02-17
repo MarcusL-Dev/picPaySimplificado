@@ -23,7 +23,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity(name = "usuarios")
+@Entity(name = "usuario")
 @Table(name = "usuarios")
 @Inheritance(strategy = InheritanceType.JOINED)
 @AllArgsConstructor
@@ -39,13 +39,11 @@ public class Usuario implements UserDetails{
     private String email;
     @Column(name = "senha", nullable = false, length = 128)
     private String senha;
-    @Column(name = "saldo", nullable = false)
-    private Double saldo = 0.0;
 
     @Column(name = "role", nullable = false)
     private Roles role;
 
-    @OneToMany(mappedBy = "usuarioRecebedor")
+    @OneToMany(mappedBy = "usuario")
     private List<Transaction> transactionsRecebidas = new ArrayList<>();
 
     public Usuario(
