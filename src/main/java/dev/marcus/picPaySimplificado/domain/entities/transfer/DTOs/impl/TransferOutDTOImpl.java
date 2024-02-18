@@ -1,6 +1,7 @@
 package dev.marcus.picPaySimplificado.domain.entities.transfer.DTOs.impl;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import dev.marcus.picPaySimplificado.domain.entities.transaction.Transaction;
 import dev.marcus.picPaySimplificado.domain.entities.transaction.TypeTransaction;
@@ -8,6 +9,7 @@ import dev.marcus.picPaySimplificado.domain.entities.transaction.DTOs.Transactio
 import dev.marcus.picPaySimplificado.domain.entities.usuario.DTOs.UsuarioOutDTO;
 
 public record TransferOutDTOImpl(
+    UUID id,
     TypeTransaction typeTransaction,
     UsuarioOutDTO usuario,
     UsuarioOutDTO usuarioRecebedor,
@@ -21,6 +23,7 @@ public record TransferOutDTOImpl(
         Transaction transaction
     ){
         this(
+            transaction.getId(),
             transaction.getTypeTransaction(),
             usuario,
             usuarioRecebedor,

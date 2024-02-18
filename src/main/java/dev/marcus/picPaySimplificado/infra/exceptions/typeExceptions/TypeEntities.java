@@ -4,5 +4,6 @@ public enum TypeEntities {
     USUARIO,
     LOGISTA,
     USUARIO_COMUM,
-    TRANSACTION
+    TRANSACTION,
+    TRANSFER
 }
