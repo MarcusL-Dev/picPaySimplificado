@@ -13,7 +13,6 @@ import dev.marcus.picPaySimplificado.domain.entities.transaction.TypeTransaction
 import dev.marcus.picPaySimplificado.domain.entities.transaction.DTOs.TransactionDTO;
 import dev.marcus.picPaySimplificado.domain.entities.transaction.DTOs.TransactionOutDTO;
 import dev.marcus.picPaySimplificado.domain.entities.transaction.DTOs.impl.TransactionOutDTOImpl;
-import dev.marcus.picPaySimplificado.domain.entities.transfer.Transfer;
 import dev.marcus.picPaySimplificado.domain.entities.transfer.DTOs.impl.TransferOutDTOImpl;
 import dev.marcus.picPaySimplificado.domain.entities.usuario.Roles;
 import dev.marcus.picPaySimplificado.domain.entities.usuario.Usuario;
@@ -50,24 +49,22 @@ public class TransactionServiceImpl implements TransactionService{
         }
     }
 
+    private TransactionOutDTO transformTransactionInTransactioOutDTO (Transaction transaction){
+        var usuario = this.transforUsuarioToUsuarioDTO(transaction.getUsuario());
+        if (transaction.getTypeTransaction() == TypeTransaction.TRANSFER) {
+            var transfer = transferService.getTransfer(transaction.getId());
+            var usuarioRecebedorData = this.transforUsuarioToUsuarioDTO(transfer.getUsuarioRecebedor());
+            return new TransferOutDTOImpl(usuario, usuarioRecebedorData, transaction);
+        }
+        return new TransactionOutDTOImpl(usuario, transaction);
+    }
+
     @Override
     public List<TransactionOutDTO> getTransactions() {
         var transactions = transactionRepository.findAll();
         var transactionsOutData = new ArrayList<TransactionOutDTO>();
-        TransactionOutDTO transactionOutData;
         for(Transaction transaction : transactions){
-
-            var usuario = transaction.getUsuario();
-            var usuarioData = this.transforUsuarioToUsuarioDTO(usuario);
-
-            if(transaction.getTypeTransaction() == TypeTransaction.TRANSFER){
-                var transfer = (Transfer) this.getTransaction(transaction.getId());
-                var usuarioRecebedor = transfer.getUsuarioRecebedor();
-                var usuarioRecebedorData = this.transforUsuarioToUsuarioDTO(usuarioRecebedor);    
-                transactionOutData = new TransferOutDTOImpl(usuarioData, usuarioRecebedorData, transfer);
-            }else{
-                transactionOutData = new TransactionOutDTOImpl(usuarioData, transaction);
-            }
+            var transactionOutData = this.transformTransactionInTransactioOutDTO(transaction);
             transactionsOutData.add(transactionOutData);
         }
         return transactionsOutData;
@@ -80,7 +77,6 @@ public class TransactionServiceImpl implements TransactionService{
 
         if(transactionData.typeTransaction() == TypeTransaction.TRANSFER){
             if (usuario.getId().toString().equals(transactionData.idUsuarioRecebedor().toString())) {
-                System.out.println("entrou");
                 throw new UsersEqualsInTransfer();
             }
             var usuarioRecebedor = usuarioService.getUsuario(transactionData.idUsuarioRecebedor());
@@ -97,19 +93,8 @@ public class TransactionServiceImpl implements TransactionService{
     @Override
     public TransactionOutDTO getTransaction(UUID id) {
         @SuppressWarnings("null")
-        var transaction = this.transactionRepository.findById(id);
-        if (!transaction.isPresent()) {
-            throw new EntityNotFoundException(TypeEntities.TRANSACTION, id);
-        }
-        var getTransaction = transaction.get();
-        var usuarioPaganteData = this.transforUsuarioToUsuarioDTO(getTransaction.getUsuario());
-
-        if (getTransaction.getTypeTransaction() == TypeTransaction.TRANSFER) {
-            var transfer = transferService.getTransfer(getTransaction.getId());
-            var usuarioRecebedorData = this.transforUsuarioToUsuarioDTO(transfer.getUsuarioRecebedor());
-            return new TransferOutDTOImpl(usuarioPaganteData, usuarioRecebedorData, getTransaction);
-        }
-
-        return new TransactionOutDTOImpl(usuarioPaganteData, getTransaction);
+        var transaction = this.transactionRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(TypeEntities.TRANSACTION, id));
+        return transformTransactionInTransactioOutDTO(transaction);
     }
 }
