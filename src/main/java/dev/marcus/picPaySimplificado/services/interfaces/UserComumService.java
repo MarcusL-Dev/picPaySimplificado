@@ -3,11 +3,11 @@ package dev.marcus.picPaySimplificado.services.interfaces;
 import java.util.List;
 import java.util.UUID;
 
-import dev.marcus.picPaySimplificado.domain.entities.userComum.DTOs.UserComumDTO;
-import dev.marcus.picPaySimplificado.domain.entities.userComum.DTOs.UserComumOutDTO;
+import dev.marcus.picPaySimplificado.domain.entities.userComum.DTOs.impls.UserComumOutDTOImpl;
+import dev.marcus.picPaySimplificado.domain.entities.usuario.DTOs.UsuarioDTO;
 
 public interface UserComumService {
-    List<UserComumOutDTO> getUsersComuns();
-    UserComumOutDTO createUserComum(UserComumDTO userComumData);
-    UserComumOutDTO getUserComum(UUID id);
+    List<UserComumOutDTOImpl> getUsersComuns();
+    UserComumOutDTOImpl createUserComum(UsuarioDTO userComumData);
+    UserComumOutDTOImpl getUserComum(UUID id);
 }

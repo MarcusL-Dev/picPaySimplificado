@@ -9,8 +9,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import dev.marcus.picPaySimplificado.domain.entities.userComum.UserComum;
-import dev.marcus.picPaySimplificado.domain.entities.userComum.DTOs.UserComumDTO;
-import dev.marcus.picPaySimplificado.domain.entities.userComum.DTOs.UserComumOutDTO;
+import dev.marcus.picPaySimplificado.domain.entities.userComum.DTOs.impls.UserComumOutDTOImpl;
+import dev.marcus.picPaySimplificado.domain.entities.usuario.DTOs.UsuarioDTO;
 import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.EntityNotFoundException;
 import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.TypeEntities;
 import dev.marcus.picPaySimplificado.repositories.UserComumRepository;
@@ -23,31 +23,31 @@ public class UserComumServiceImpl implements UserComumService{
     private UserComumRepository userComumRepository;
 
     @Override
-    public List<UserComumOutDTO> getUsersComuns() {
-        var usersComunsOutData = new ArrayList<UserComumOutDTO>();
+    public List<UserComumOutDTOImpl> getUsersComuns() {
+        var usersComunsOutData = new ArrayList<UserComumOutDTOImpl>();
         var usersComuns = this.userComumRepository.findAll();
         for(UserComum userComum: usersComuns){
-            var userComumOutData = new UserComumOutDTO(userComum);
+            var userComumOutData = new UserComumOutDTOImpl(userComum);
             usersComunsOutData.add(userComumOutData);
         }
         return usersComunsOutData;  
     }
 
     @Override
-    public UserComumOutDTO createUserComum(UserComumDTO userComumData) {
-        String encryptedSenha = new BCryptPasswordEncoder().encode(userComumData.senha());
+    public UserComumOutDTOImpl createUserComum(UsuarioDTO userComumData) {
+        String encryptedSenha = new BCryptPasswordEncoder().encode(userComumData.getSenha());
         var newUserComum = new UserComum(userComumData, encryptedSenha);
         this.userComumRepository.save(newUserComum);
-        var userComumOutData = new UserComumOutDTO(newUserComum);
+        var userComumOutData = new UserComumOutDTOImpl(newUserComum);
         return userComumOutData;
     }
 
     @Override
-    public UserComumOutDTO getUserComum(UUID id) {
+    public UserComumOutDTOImpl getUserComum(UUID id) {
         @SuppressWarnings("null")
         var userComum = userComumRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException(TypeEntities.USUARIO_COMUM, id));
-        var userComumOutData = new UserComumOutDTO(userComum);
+        var userComumOutData = new UserComumOutDTOImpl(userComum);
         return userComumOutData;
     }
     

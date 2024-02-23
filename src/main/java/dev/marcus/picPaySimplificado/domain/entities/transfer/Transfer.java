@@ -12,8 +12,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.*;
 
-@Entity(name = "transfer")
-@Table(name = "transfers")
+@Entity(name = "TRANSFER")
+@Table(name = "TRANSFERS")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -26,19 +26,11 @@ public class Transfer extends Transaction{
 
     public Transfer(TransactionDTO transactionData, LocalDateTime dataHora, Usuario usuario, Usuario usuarioRecebedor){
         super(
-            transactionData.valor(),
+            transactionData.getValor(),
             dataHora,
             TypeTransaction.TRANSFER,
             usuario
         );
         setUsuarioRecebedor(usuarioRecebedor);
-    }
-
-    public void setUsuarioRecebedor(Usuario usuarioRecebedor) {
-        this.usuarioRecebedor = usuarioRecebedor;
-    }
-
-    public Usuario getUsuarioRecebedor() {
-        return usuarioRecebedor;
     }
 }

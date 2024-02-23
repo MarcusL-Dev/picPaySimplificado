@@ -1,6 +1,5 @@
 package dev.marcus.picPaySimplificado.domain.entities.transaction;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -29,26 +28,26 @@ import lombok.*;
 @EqualsAndHashCode(of = "id")
 @Setter
 @Getter
-public class Transaction {
+public class Transaction{
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @Column(name = "valor", nullable = false)
-    private BigDecimal valor;
+    private Float valor;
+    
+    @Enumerated(EnumType.STRING)
+    private TypeTransaction typeTransaction;
 
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime dataHora;
-
-    @Enumerated(EnumType.STRING)
-    private TypeTransaction typeTransaction;
 
     @ManyToOne
     @JoinColumn(name = "id_usuario")
     private Usuario usuario;
 
     public Transaction(
-        BigDecimal valor,
+        float valor,
         LocalDateTime dataHora,
         TypeTransaction typeTransaction,
         Usuario usuario

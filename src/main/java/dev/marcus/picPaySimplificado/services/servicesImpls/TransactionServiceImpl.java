@@ -16,15 +16,14 @@ import dev.marcus.picPaySimplificado.domain.entities.transaction.DTOs.impl.Trans
 import dev.marcus.picPaySimplificado.domain.entities.transfer.DTOs.impl.TransferOutDTOImpl;
 import dev.marcus.picPaySimplificado.domain.entities.usuario.Roles;
 import dev.marcus.picPaySimplificado.domain.entities.usuario.Usuario;
-import dev.marcus.picPaySimplificado.domain.entities.usuario.DTOs.UsuarioOutDTO;
 import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.EntityNotFoundException;
+import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.LogistaSendingTransferException;
+import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.SaldoInsuficienteException;
 import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.TypeEntities;
 import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.UsersEqualsInTransfer;
 import dev.marcus.picPaySimplificado.repositories.TransactionReporitory;
-import dev.marcus.picPaySimplificado.services.interfaces.LogistaService;
 import dev.marcus.picPaySimplificado.services.interfaces.TransactionService;
 import dev.marcus.picPaySimplificado.services.interfaces.TransferService;
-import dev.marcus.picPaySimplificado.services.interfaces.UserComumService;
 import dev.marcus.picPaySimplificado.services.interfaces.UsuarioService;
 
 @Service
@@ -35,28 +34,45 @@ public class TransactionServiceImpl implements TransactionService{
     @Autowired
     private UsuarioService usuarioService;
     @Autowired
-    private UserComumService userComumService;
-    @Autowired
-    private LogistaService logistaService;
-    @Autowired
     private TransferService transferService;
 
-    private UsuarioOutDTO transforUsuarioToUsuarioDTO(Usuario usuario){
-        if (usuario.getRole() == Roles.COMUM) {
-            return userComumService.getUserComum(usuario.getId());
-        }else{
-            return logistaService.getLogista(usuario.getId()); 
+    private TransactionOutDTO transformTransactionInTransactioOutDTO (Transaction transaction){
+        if (transaction.getTypeTransaction() == TypeTransaction.TRANSFER) {
+            var transfer = transferService.getTransfer(transaction.getId());
+            var usuarioRecebedorData = this.usuarioService.transforUsuarioToUsuarioDTO(transfer.getUsuarioRecebedor());
+            var usuarioData = this.usuarioService.transforUsuarioToUsuarioDTO(transaction.getUsuario());
+            return new TransferOutDTOImpl(usuarioData, usuarioRecebedorData, transaction);
+        }
+        var usuarioData = this.usuarioService.transforUsuarioToUsuarioDTO(transaction.getUsuario());
+        return new TransactionOutDTOImpl(usuarioData, transaction);
+    }
+
+    private void validaSaldoForTransaction(Usuario usuario, float valorADecrementar){
+        if (valorADecrementar > usuario.getSaldo()) {
+            throw new SaldoInsuficienteException();
         }
     }
 
-    private TransactionOutDTO transformTransactionInTransactioOutDTO (Transaction transaction){
-        var usuario = this.transforUsuarioToUsuarioDTO(transaction.getUsuario());
-        if (transaction.getTypeTransaction() == TypeTransaction.TRANSFER) {
-            var transfer = transferService.getTransfer(transaction.getId());
-            var usuarioRecebedorData = this.transforUsuarioToUsuarioDTO(transfer.getUsuarioRecebedor());
-            return new TransferOutDTOImpl(usuario, usuarioRecebedorData, transaction);
+    private void validaUsersEqualsInTransfer(Usuario usuario, TransactionDTO transactionData){
+        if (usuario.getId().toString().equals(transactionData.getIdUsuarioRecebedor().toString())) {
+            throw new UsersEqualsInTransfer();
         }
-        return new TransactionOutDTOImpl(usuario, transaction);
+    }
+
+    private void validaLogistaSendTransfer(Usuario usuario){
+        if (usuario.getRole() == Roles.LOGISTA) {
+            throw new LogistaSendingTransferException();
+        }
+    }
+
+    private void validaTransaction(Usuario usuario, TransactionDTO transactionData){
+        if (transactionData.getTypeTransaction() != TypeTransaction.DEPOSITO) {
+            if(transactionData.getTypeTransaction() == TypeTransaction.TRANSFER){
+                this.validaLogistaSendTransfer(usuario);
+                this.validaUsersEqualsInTransfer(usuario, transactionData);
+            }
+            this.validaSaldoForTransaction(usuario, transactionData.getValor());
+        }
     }
 
     @Override
@@ -73,21 +89,15 @@ public class TransactionServiceImpl implements TransactionService{
     @Override
     public TransactionOutDTO createTransaction(TransactionDTO transactionData, String userEmail) {
         var usuario = usuarioService.getUsuarioByEmail(userEmail);
-        var usuarioData = this.transforUsuarioToUsuarioDTO(usuario);
-
-        if(transactionData.typeTransaction() == TypeTransaction.TRANSFER){
-            if (usuario.getId().toString().equals(transactionData.idUsuarioRecebedor().toString())) {
-                throw new UsersEqualsInTransfer();
-            }
-            var usuarioRecebedor = usuarioService.getUsuario(transactionData.idUsuarioRecebedor());
-            var usuarioRecebedorData = this.transforUsuarioToUsuarioDTO(usuarioRecebedor);
+        this.validaTransaction(usuario, transactionData);
+        if(transactionData.getTypeTransaction() == TypeTransaction.TRANSFER){
+            var usuarioRecebedor = usuarioService.getUsuario(transactionData.getIdUsuarioRecebedor());
             var newTransfer = transferService.creteTransfer(transactionData, usuario, usuarioRecebedor);
-            return new TransferOutDTOImpl(usuarioData, usuarioRecebedorData, newTransfer);
+            return this.transformTransactionInTransactioOutDTO(newTransfer);
         }
-
-        var newTransaction = new Transaction(transactionData.valor(), LocalDateTime.now(), transactionData.typeTransaction(), usuario);
+        var newTransaction = new Transaction(transactionData.getValor(), LocalDateTime.now(), transactionData.getTypeTransaction(), usuario);
         transactionRepository.save(newTransaction);
-        return new TransactionOutDTOImpl(usuarioData, newTransaction);
+        return this.transformTransactionInTransactioOutDTO(newTransaction);
     }
 
     @Override

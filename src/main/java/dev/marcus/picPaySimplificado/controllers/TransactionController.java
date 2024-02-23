@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.RestController;
 import dev.marcus.picPaySimplificado.domain.entities.transaction.DTOs.TransactionDTO;
 import dev.marcus.picPaySimplificado.domain.entities.transaction.DTOs.TransactionOutDTO;
 import dev.marcus.picPaySimplificado.services.interfaces.TransactionService;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -30,7 +29,6 @@ public class TransactionController {
     private TransactionService transactionService;
 
     @PostMapping()
-    @Transactional
     public ResponseEntity<TransactionOutDTO> createTransaction(
         @RequestBody @Valid TransactionDTO transactionData
     ) {
@@ -48,6 +46,4 @@ public class TransactionController {
     public ResponseEntity<TransactionOutDTO> getTransaction(@PathVariable UUID id) {
         return ResponseEntity.ok().body(transactionService.getTransaction(id));
     }
-    
-    
 }

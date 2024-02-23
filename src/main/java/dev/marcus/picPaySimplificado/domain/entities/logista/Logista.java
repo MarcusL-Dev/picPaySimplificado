@@ -1,8 +1,8 @@
 package dev.marcus.picPaySimplificado.domain.entities.logista;
 
-import dev.marcus.picPaySimplificado.domain.entities.logista.DTOs.LogistaDTO;
 import dev.marcus.picPaySimplificado.domain.entities.usuario.Roles;
 import dev.marcus.picPaySimplificado.domain.entities.usuario.Usuario;
+import dev.marcus.picPaySimplificado.domain.entities.usuario.DTOs.UsuarioDTO;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -21,13 +21,13 @@ public class Logista extends Usuario{
     @Column(name = "cnpj", nullable = false, unique = true, length = 14)
     private String cnpj;
 
-    public Logista(LogistaDTO logistaData, String senha){
+    public Logista(UsuarioDTO logistaData, String senha){
         super(
-            logistaData.nome(),
-            logistaData.email(),
+            logistaData.getNome(),
+            logistaData.getEmail(),
             senha,
             Roles.LOGISTA
         );
-        setCnpj(logistaData.cnpj());
+        setCnpj(logistaData.getCnpjOrCpf());
     }
 }

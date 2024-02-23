@@ -9,10 +9,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import dev.marcus.picPaySimplificado.domain.entities.logista.Logista;
-import dev.marcus.picPaySimplificado.domain.entities.logista.DTOs.LogistaDTO;
-import dev.marcus.picPaySimplificado.domain.entities.logista.DTOs.LogistaOutDTO;
-import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.EntityNotFoundException;
-import dev.marcus.picPaySimplificado.infra.exceptions.typeExceptions.TypeEntities;
+import dev.marcus.picPaySimplificado.domain.entities.logista.DTOs.impls.LogistaOutDTOImpl;
+import dev.marcus.picPaySimplificado.domain.entities.usuario.DTOs.UsuarioDTO;
 import dev.marcus.picPaySimplificado.repositories.LogistaRepository;
 import dev.marcus.picPaySimplificado.services.interfaces.LogistaService;
 
@@ -23,32 +21,30 @@ public class LogistaServiceImpl implements LogistaService{
     private LogistaRepository logistaRepository;
 
     @Override
-    public List<LogistaOutDTO> getLogistas() {
-        var logistasOutData = new ArrayList<LogistaOutDTO>();
+    public List<LogistaOutDTOImpl> getLogistas() {
+        var logistasOutData = new ArrayList<LogistaOutDTOImpl>();
         var logistas = this.logistaRepository.findAll();
         for(Logista logista: logistas){
-            var logistaOutData = new LogistaOutDTO(logista);
+            var logistaOutData = new LogistaOutDTOImpl(logista);
             logistasOutData.add(logistaOutData);
         }
         return logistasOutData;
     }
 
     @Override
-    public LogistaOutDTO createLogista(LogistaDTO logistaData) {
-        String encryptedSenha = new BCryptPasswordEncoder().encode(logistaData.senha());
+    public LogistaOutDTOImpl createLogista(UsuarioDTO logistaData) {
+        String encryptedSenha = new BCryptPasswordEncoder().encode(logistaData.getSenha());
         var newLogista = new Logista(logistaData, encryptedSenha);
         this.logistaRepository.save(newLogista);
-        var logistaOutData = new LogistaOutDTO(newLogista);
+        var logistaOutData = new LogistaOutDTOImpl(newLogista);
         return logistaOutData;
     }
 
     @Override
-    public LogistaOutDTO getLogista(UUID id) {
+    public LogistaOutDTOImpl getLogista(UUID id) {
         @SuppressWarnings("null")
-        var logista = logistaRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException(TypeEntities.LOGISTA, id));
-        var logistaOutData = new LogistaOutDTO(logista);
+        var logista = logistaRepository.findById(id).get();
+        var logistaOutData = new LogistaOutDTOImpl(logista);
         return logistaOutData;
     }
-    
 }

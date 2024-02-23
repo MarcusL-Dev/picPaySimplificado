@@ -10,8 +10,11 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import dev.marcus.picPaySimplificado.domain.entities.transaction.Transaction;
+import dev.marcus.picPaySimplificado.domain.entities.transaction.TypeTransaction;
+import dev.marcus.picPaySimplificado.domain.entities.transfer.Transfer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -43,8 +46,11 @@ public class Usuario implements UserDetails{
     @Column(name = "role", nullable = false)
     private Roles role;
 
-    @OneToMany(mappedBy = "usuario")
-    private List<Transaction> transactionsRecebidas = new ArrayList<>();
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "usuario")
+    private List<Transaction> transactions = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "usuarioRecebedor")
+    private List<Transfer> transferenciasRecebidas = new ArrayList<>();
 
     public Usuario(
         String nome,
@@ -56,6 +62,21 @@ public class Usuario implements UserDetails{
         this.setEmail(email);
         this.setSenha(senha);
         this.setRole(role);
+    }
+
+    public float getSaldo(){
+        float saldo = 0;
+        for(Transaction transaction : this.getTransactions()){
+            if (transaction.getTypeTransaction() == TypeTransaction.DEPOSITO) {
+                saldo = saldo + transaction.getValor();  
+            }else{
+                saldo = saldo - transaction.getValor();
+            }
+        }
+        for(Transfer transferRecebida : this.getTransferenciasRecebidas()){
+            saldo = saldo + transferRecebida.getValor();
+        }
+        return saldo;
     }
 
     @Override
